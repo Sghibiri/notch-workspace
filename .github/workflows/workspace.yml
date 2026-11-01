@@ -1,0 +1,38 @@
+name: Notch Workspace
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Workspace/**'
+      - 'boringNotch/components/Notch/NotchShape.swift'
+      - 'mediaremote-adapter/**'
+      - '.github/workflows/workspace.yml'
+  pull_request:
+    paths:
+      - 'Workspace/**'
+      - 'boringNotch/components/Notch/NotchShape.swift'
+      - 'mediaremote-adapter/**'
+      - '.github/workflows/workspace.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workspace-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-check:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build native application
+        run: bash Workspace/Scripts/build.sh
+      - name: Check core behavior with isolated test data
+        run: '"../Notch Workspace.app/Contents/MacOS/NotchWorkspace" --self-test'
+      - name: Verify packaged signature
+        run: codesign --verify --deep --strict "../Notch Workspace.app"
