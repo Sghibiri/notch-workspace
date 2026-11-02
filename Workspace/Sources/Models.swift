@@ -5,12 +5,13 @@ import Combine
 import Foundation
 
 enum WorkspaceTab: String, CaseIterable, Identifiable {
-    case home, music, files, clipboard, actions
+    case home, weather, music, files, clipboard, actions
     var id: String { rawValue }
     var title: String { rawValue.capitalized }
     var symbol: String {
         switch self {
         case .home: return "square.grid.2x2"
+        case .weather: return "cloud.sun"
         case .music: return "waveform"
         case .files: return "tray"
         case .clipboard: return "doc.on.clipboard"

@@ -110,6 +110,45 @@ enum WorkspaceTests {
             let restored = PomodoroService(defaults: defaults)
             check(restored.configuration == pomodoro.configuration, "Pomodoro preferences persist across launches")
             restored.reset(); pomodoro.reset()
+
+            check(WeatherCondition(code: 0, isDay: false).symbol == "moon.stars.fill", "Clear nights use the night icon")
+            check(WeatherCondition(code: 75, isDay: true).mood == .snow && WeatherCondition(code: 95, isDay: true).mood == .storm, "Snow and thunderstorm codes select their matching effects")
+            check(WeatherCondition(code: 999, isDay: true).mood == .unknown, "Unknown weather codes do not claim clear skies")
+            check(WeatherUnit.fahrenheit.value(0) == 32 && WeatherUnit.fahrenheit.value(100) == 212, "Temperature conversion uses the Celsius scale correctly")
+            check(WeatherUnit.celsius.format(16.6) == "17°", "Temperatures round for display")
+            let forecastURL = try WeatherService.forecastURL(for: .estoril)
+            let params = URLComponents(url: forecastURL, resolvingAgainstBaseURL: false)!.queryItems!
+            check(forecastURL.host == "api.open-meteo.com" && params.contains(.init(name: "timezone", value: "auto")), "Forecast requests use the provider and location time zone")
+            check(params.contains(.init(name: "timeformat", value: "unixtime")), "Forecast timestamps are requested as absolute instants")
+            let invalidPlace = WeatherPlace(id: 0, name: "Invalid", latitude: 1000, longitude: 0, country: nil, admin1: nil, timezone: nil)
+            let invalidURL = try? WeatherService.forecastURL(for: invalidPlace)
+            check(invalidURL == nil, "Invalid coordinates are rejected before making a request")
+            let fixture = """
+            {"timezone":"Europe/Lisbon","current":{"time":1793577600,"temperature_2m":16.1,"apparent_temperature":14.3,"relative_humidity_2m":58,"wind_speed_10m":8,"weather_code":0,"is_day":0},"hourly":{"time":[1793577600,1793581200,1793584800],"temperature_2m":[16.1,null,17.2],"precipitation_probability":[5,null,40],"weather_code":[0,2,61],"is_day":[0,1,1]},"daily":{"time":[1793577600,1793664000],"temperature_2m_min":[12,13],"temperature_2m_max":[20,21],"weather_code":[0],"sunrise":[1793602800],"sunset":[1793638800],"precipitation_probability_max":[15],"uv_index_max":[3]}}
+            """
+            let decodedWeather = try JSONDecoder().decode(WeatherAPIResponse.self, from: Data(fixture.utf8))
+            let forecast = try decodedWeather.snapshot(place: .estoril, fetchedAt: Date(timeIntervalSince1970: 1793577600))
+            check(forecast.hours.count == 2 && forecast.days.count == 1, "Missing forecast fields skip incomplete rows without misaligning arrays")
+            check(forecast.temperature == 16.1 && forecast.humidity == 58 && forecast.wind == 8, "Current weather values survive decoding")
+            check(forecast.hours[1].code == 61 && forecast.hours[1].precipitationChance == 40, "Hourly conditions stay attached to their own timestamp")
+            check(forecast.timeZone.identifier == "Europe/Lisbon", "Forecast dates use Estoril's time zone")
+            check(forecast.upcomingHours(at: Date(timeIntervalSince1970: 1793584800)).count == 1, "The hourly view excludes past forecast slots")
+            let weatherFolder = root.appendingPathComponent("weather")
+            try FileManager.default.createDirectory(at: weatherFolder, withIntermediateDirectories: true)
+            try JSONEncoder().encode(forecast).write(to: weatherFolder.appendingPathComponent("weather.json"))
+            let weather = WeatherService(defaults: defaults, directory: weatherFolder)
+            check(weather.snapshot?.temperature == 16.1 && !weather.isLoading, "Cached weather loads without starting a network request")
+            weather.unit = .fahrenheit
+            weather.effectsEnabled = false
+            let restoredWeather = WeatherService(defaults: defaults, directory: weatherFolder)
+            check(restoredWeather.unit == .fahrenheit && !restoredWeather.effectsEnabled, "Weather display and animation choices persist")
+            let otherPlace = WeatherPlace(id: 1, name: "Another city", latitude: 40, longitude: -8, country: "Portugal", admin1: nil, timezone: "Europe/Lisbon")
+            defaults.set(try JSONEncoder().encode(otherPlace), forKey: "weatherPlace")
+            let differentCity = WeatherService(defaults: defaults, directory: weatherFolder)
+            check(differentCity.snapshot == nil, "A saved forecast is not reused for a different city")
+            let previewWeather = WeatherService(defaults: defaults, directory: weatherFolder, preview: true)
+            check(previewWeather.preview && previewWeather.snapshot?.place == .estoril && !previewWeather.isLoading, "Weather preview uses explicit sample data without network access")
+            weather.stop(); restoredWeather.stop(); differentCity.stop(); previewWeather.stop()
         } catch { failures.append("Unexpected error: \(error)") }
         print("Notch Workspace: \(count - failures.count)/\(count) checks passed")
         for failure in failures { print("FAIL: \(failure)") }

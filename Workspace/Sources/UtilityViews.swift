@@ -237,7 +237,7 @@ struct PreferencesView: View {
                 Image(systemName: "square.stack.3d.up.fill").font(.system(size: 27)).foregroundStyle(WorkspaceTheme.accent)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Notch Workspace").font(.system(size: 21, weight: .semibold))
-                    Text("Your Mac, a little closer. · Version 0.1.0").font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text("Your Mac, a little closer. · Version 0.2.0").font(.system(size: 11)).foregroundStyle(.secondary)
                 }
             }
             Divider()

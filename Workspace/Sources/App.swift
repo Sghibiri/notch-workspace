@@ -16,6 +16,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
     private var panel: WorkspacePanel!
     private var statusItem: NSStatusItem!
     private var preferencesWindow: NSWindow?
+    private var weatherWindow: WeatherWindowController?
     private var hoverTask: Task<Void, Never>?
     private var suppressHoverUntilExit = false
     private var lastKeyboardToggle = Date.distantPast
@@ -40,6 +41,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         model.requestToggle = { [weak self] in self?.setExpanded(!(self?.model.expanded ?? false), activate: true) }
         model.requestExpand = { [weak self] tab in self?.model.tab = tab; self?.setExpanded(true) }
         model.pointerChanged = { [weak self] inside in self?.pointerChanged(inside) }
+        model.requestWeatherWindow = { [weak self] in self?.openWeather() }
         setupPanel()
         setupMenu()
         registerHotkey()
@@ -179,6 +181,12 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         model.tab = tab
         setExpanded(true, activate: true)
     }
+    private func openWeather() {
+        if weatherWindow == nil { weatherWindow = WeatherWindowController(model: model) }
+        suppressHoverUntilExit = true
+        setExpanded(false)
+        weatherWindow?.open()
+    }
     @objc private func openPreferences() {
         if preferencesWindow == nil {
             let controller = NSHostingController(rootView: PreferencesView(model: model, clipboard: model.clipboard))
@@ -220,6 +228,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
         model.stop()
+        weatherWindow?.close()
     }
 }
 
@@ -227,6 +236,17 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
 struct NotchWorkspaceMain {
     @MainActor static func main() {
         if CommandLine.arguments.contains("--self-test") { exit(WorkspaceTests.run()) }
+        if CommandLine.arguments.contains("--weather-check") {
+            Task {
+                do {
+                    let forecast = try await WeatherService.fetch(place: .estoril)
+                    print("Weather live check: \(forecast.place.name), \(forecast.hours.count) hours, \(forecast.days.count) days, time zone \(forecast.timezone)")
+                    exit(0)
+                } catch { print("Weather live check failed: \(error)"); exit(1) }
+            }
+            RunLoop.main.run()
+            return
+        }
         let app = NSApplication.shared
         let delegate = WorkspaceDelegate(preview: CommandLine.arguments.contains("--preview"))
         app.delegate = delegate

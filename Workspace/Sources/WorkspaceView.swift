@@ -58,7 +58,7 @@ struct WorkspaceView: View {
                         HStack(spacing: 6) {
                             Image(systemName: tab.symbol).font(.system(size: 11, weight: .medium))
                             Text(tab.title).font(.system(size: 11, weight: .medium))
-                        }.padding(.horizontal, 11).padding(.vertical, 8)
+                        }.padding(.horizontal, 8).padding(.vertical, 8)
                             .foregroundStyle(model.tab == tab ? .white : WorkspaceTheme.dim)
                             .background(model.tab == tab ? Color.white.opacity(0.105) : .clear, in: Capsule())
                     }.buttonStyle(.plain).accessibilityLabel("\(tab.title) tab")
@@ -71,7 +71,8 @@ struct WorkspaceView: View {
 
             Group {
                 switch model.tab {
-                case .home: HomeView(model: model, music: music, shelf: model.shelf, clipboard: model.clipboard)
+                case .home: HomeView(model: model, music: music, shelf: model.shelf, clipboard: model.clipboard, weather: model.weather)
+                case .weather: WeatherQuickView(model: model, weather: model.weather)
                 case .music: MusicView(music: music)
                 case .files: FilesView(model: model, shelf: model.shelf)
                 case .clipboard: ClipboardView(model: model, clipboard: model.clipboard)
@@ -110,6 +111,7 @@ struct HomeView: View {
     @ObservedObject var music: MusicService
     @ObservedObject var shelf: ShelfService
     @ObservedObject var clipboard: ClipboardService
+    @ObservedObject var weather: WeatherService
     @State private var showPomodoro = false
     var body: some View {
         VStack(spacing: 14) {
@@ -117,8 +119,11 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(context.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()).uppercased())
-                                .font(.system(size: 9, weight: .medium)).tracking(1.2).foregroundStyle(WorkspaceTheme.dim)
+                            HStack(spacing: 9) {
+                                Text(context.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()).uppercased())
+                                    .font(.system(size: 9, weight: .medium)).tracking(1.2).foregroundStyle(WorkspaceTheme.dim)
+                                WeatherHomeBadge(weather: weather) { model.tab = .weather }
+                            }
                             if model.pomodoro.active {
                                 Text(timeLabel(model.pomodoro.remaining(at: context.date))).font(.system(size: 47, weight: .light, design: .rounded)).monospacedDigit().foregroundStyle(WorkspaceTheme.mint)
                             } else {

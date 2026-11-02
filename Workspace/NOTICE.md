@@ -9,3 +9,5 @@ NotchShape was originally created by Kai Azim for DynamicNotchKit and modified b
 MediaRemoteAdapter and mediaremote-adapter.pl are by Jonas van den Berg, used under BSD-3-Clause. Their license is included with this target and with the built app. Source: https://github.com/ungive/mediaremote-adapter . The bundled framework is retained from the upstream Boring Notch repository, including its existing signature.
 
 All new Workspace source and this derivative as a whole are provided under GPL-3.0. There is no warranty. The complete corresponding source and build script accompany this app in the NotchWorkspace folder. DynamicLake's proprietary code, name, branding, and media are not included in the application.
+
+Weather data is provided by Open-Meteo (https://open-meteo.com/) under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), with city data based on GeoNames (https://www.geonames.org/). The public endpoints are for non-commercial use under the provider terms (https://open-meteo.com/en/terms). Data is reformatted for display, rounded, and optionally converted to Fahrenheit. No provider library code is bundled.
