@@ -128,11 +128,24 @@ struct WeatherSnapshot: Codable {
         return calendar.isDate(date, inSameDayAs: now)
     }
     static func preview(at date: Date = Date()) -> Self {
-        let hours = (0..<24).map { index in
-            WeatherHour(time: date.addingTimeInterval(Double(index) * 3600), temperature: 17 + 3 * sin(Double(index) / 4), precipitationChance: max(0, 65 - index * 5), code: index < 4 ? 61 : 2, isDay: index > 7 && index < 18)
+        var hours: [WeatherHour] = []
+        for index in 0..<24 {
+            let time: Date = date.addingTimeInterval(Double(index) * 3600.0)
+            let temperature: Double = 17.0 + 3.0 * sin(Double(index) / 4.0)
+            let chance: Int = max(0, 65 - index * 5)
+            let code: Int = index < 4 ? 61 : 2
+            hours.append(WeatherHour(time: time, temperature: temperature, precipitationChance: chance, code: code, isDay: index > 7 && index < 18))
         }
-        let days = (0..<7).map { index in
-            WeatherDay(time: date.addingTimeInterval(Double(index) * 86400), low: Double(13 + index % 3), high: Double(19 + index % 4), code: [61, 2, 0, 3, 80, 1, 2][index], sunrise: date.addingTimeInterval(7 * 3600), sunset: date.addingTimeInterval(17 * 3600), precipitationChance: [65, 20, 5, 35, 70, 10, 15][index], uv: 3)
+        var days: [WeatherDay] = []
+        let codes: [Int] = [61, 2, 0, 3, 80, 1, 2]
+        let chances: [Int] = [65, 20, 5, 35, 70, 10, 15]
+        for index in 0..<7 {
+            let time: Date = date.addingTimeInterval(Double(index) * 86400.0)
+            let low: Double = Double(13 + index % 3)
+            let high: Double = Double(19 + index % 4)
+            let sunrise: Date = time.addingTimeInterval(7.0 * 3600.0)
+            let sunset: Date = time.addingTimeInterval(17.0 * 3600.0)
+            days.append(WeatherDay(time: time, low: low, high: high, code: codes[index], sunrise: sunrise, sunset: sunset, precipitationChance: chances[index], uv: 3.0))
         }
         return Self(place: .estoril, fetchedAt: date, observedAt: date, timezone: "Europe/Lisbon", temperature: 17, feelsLike: 16, humidity: 78, wind: 14, code: 61, isDay: false, hours: hours, days: days)
     }
