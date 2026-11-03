@@ -25,6 +25,24 @@ enum WorkspaceTests {
         check(!QuickAction.isValidWebsite("file:///etc/passwd"), "File URLs are rejected as websites")
         check(!QuickAction.isValidWebsite("https://"), "Website actions require a host")
 
+        check(AppVersion("v0.10.0")! > AppVersion("v0.9.9")!, "Update versions compare numbers instead of sorting text")
+        check(AppVersion("1.2.3")! > AppVersion("1.2.3-rc.1")!, "A final release follows its prereleases")
+        check(AppVersion("1.2.3-beta.10")! > AppVersion("1.2.3-beta.2")!, "Numbered prereleases use numeric ordering")
+        check(AppVersion("1.2.3+build.42") == AppVersion("v1.2.3"), "Build metadata does not cause false update prompts")
+        let malformedVersions = ["", "v", "1.2", "1.2.3.4", "1.-2.3", "1.02.3", "1.2.3-beta..1", "1.2.3-01", "1.2.3+", "1.2.3/evil", "999999999999999999999999.0.0"]
+        check(malformedVersions.allSatisfy { AppVersion($0) == nil }, "Malformed and overflowing remote version tags are rejected")
+        let releasesJSON = """
+        [{"tag_name":"v0.9.0","draft":false,"prerelease":true},
+         {"tag_name":"v99.0.0","draft":true},
+         {"tag_name":"invalid","draft":false},
+         {"tag_name":"v0.10.0","draft":false,"prerelease":true}]
+        """
+        let releases = (try? JSONDecoder().decode([WorkspaceRelease].self, from: Data(releasesJSON.utf8))) ?? []
+        let newest = WorkspaceRelease.newest(in: releases)
+        check(newest?.tag_name == "v0.10.0", "Update checks include public development releases and ignore drafts and invalid tags")
+        check(newest?.url.absoluteString == "https://github.com/Sghibiri/notch-workspace/releases/tag/v0.10.0", "Update links point to this project's release page")
+        check(WorkspaceRelease.newest(in: []) == nil, "An empty release response does not claim the app is current")
+
         let geometry = PanelGeometry(screenFrame: CGRect(x: -1512, y: 200, width: 1512, height: 982), cameraWidth: 180, cameraHeight: 32)
         check(geometry.frame(expanded: true).maxY == 1182, "Panel attaches to the selected screen's top")
         check(geometry.frame(expanded: true).midX == -756, "Panel centers on displays with negative coordinates")

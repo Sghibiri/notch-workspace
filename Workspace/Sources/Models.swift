@@ -118,7 +118,7 @@ struct PanelGeometry {
     let cameraWidth: CGFloat
     let cameraHeight: CGFloat
     var compactSize: CGSize { CGSize(width: max(260, cameraWidth + 88), height: max(32, cameraHeight)) }
-    var expandedSize: CGSize { CGSize(width: min(624, screenFrame.width - 40), height: 394) }
+    var expandedSize: CGSize { CGSize(width: min(624, screenFrame.width - 40), height: 432) }
     func frame(expanded: Bool, showsTimer: Bool = false) -> CGRect {
         let compact = CGSize(width: compactSize.width + (showsTimer ? 44 : 0), height: compactSize.height)
         let size = expanded ? expandedSize : compact

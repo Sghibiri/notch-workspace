@@ -2,7 +2,7 @@
 
 A small, native Mac workspace that expands from the notch. Built from [Boring Notch](https://github.com/TheBoredTeam/boring.notch), with an independent lightweight AppKit/SwiftUI target.
 
-![Notch Workspace preview with sample music](Workspace/Resources/preview.png)
+![Notch Workspace home panel](Workspace/Resources/preview.png)
 
 ## Get the app
 
@@ -17,13 +17,16 @@ Hover over the notch or press **Control–Option–Space**. Move away to close i
 - **Files:** a persistent drop shelf. Drag files in and back out; open, share, or reveal them in Finder. Originals are never moved or deleted.
 - **Clipboard:** searchable history of up to 40 text copies, explicitly enabled, kept in memory, with pause and clear. History clears on quit or screen lock. If macOS blocks clipboard access, capture stops and the Clipboard tab explains how to review access.
 - **Quick actions:** apps, websites, and existing Apple Shortcuts, plus Downloads, Screenshot, and System Settings.
-- **Pomodoro:** focus and break times you can change, short and long breaks, configurable rounds, pause/resume, and optional automatic progression. **Reset** and **Cancel** are directly below the active timer. **Times** opens settings inside the notch; the panel remains anchored to the top of the display. The compact notch shows the countdown. Running and paused sessions survive app restarts; a session that ended while the app was closed advances once to a paused next phase.
+- **Pomodoro:** focus and break times you can change, short and long breaks, configurable rounds, pause/resume, and optional automatic progression. **Reset** and **Cancel** are directly below the active timer. The sliders beside Focus open settings inside the notch; the panel remains anchored to the top of the display. The compact notch shows the countdown. Running and paused sessions survive app restarts; a session that ended while the app was closed advances once to a paused next phase.
+- **Settings:** an optional launch-at-login switch and a manual update check, accessible directly from the notch. Update checks open the matching GitHub release for you to review and install.
+
+Version 0.4 refines the native interface with aligned focus and music cards, larger timer controls, clearer typography, subtle hover feedback, and grouped settings. It uses static shapes and fills rather than adding a rendering framework.
 
 ## Built to stay small
 
 No Electron, embedded browser, persistent server, account, or analytics. Weather requests go directly to Open-Meteo and use a 15-minute cache while a weather view is visible. Hover is event driven. Clipboard polling stops when capture is disabled. Pomodoro sleeps until its deadline instead of polling. The original project's optional camera/calendar/updater/XPC/animation packages are not linked into this target.
 
-The app bundle is approximately **3.8 MB**, with a **1.3 MB** download. Resource measurements, test details, build instructions, and scope are documented in [Workspace/README.md](Workspace/README.md).
+The app bundle is approximately **4.1 MB**, with a **1.5 MB** download. Resource measurements, test details, build instructions, and scope are documented in [Workspace/README.md](Workspace/README.md).
 
 ![Estoril weather window](Workspace/Resources/weather-preview.png)
 
@@ -36,7 +39,7 @@ bash Workspace/Scripts/build.sh
 "../Notch Workspace.app/Contents/MacOS/NotchWorkspace" --self-test
 ```
 
-The build produces an app and zip archive beside the source folder. The 69 checks use temporary files, an isolated pasteboard, and synthetic data. A `--preview` argument opens a UI preview without monitoring music or clipboard contents or requesting real weather.
+The build produces an app and zip archive beside the source folder. The 77 checks use temporary files, an isolated pasteboard, and synthetic data. A `--preview` argument opens a UI preview without monitoring music or clipboard contents or requesting real weather.
 
 The custom application is in **Workspace/Sources**. The original Boring Notch Xcode project remains in this repository for reference, with its original [README](README.upstream.md). This target directly reuses its notch geometry and adapts its MediaRemoteAdapter integration.
 

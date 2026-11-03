@@ -20,6 +20,8 @@ final class WorkspaceModel: ObservableObject {
     let music: MusicService
     let pomodoro: PomodoroService
     let weather: WeatherService
+    let loginItem: LoginItemService
+    let updates: UpdateService
     let defaults: UserDefaults
     let preview: Bool
     var requestToggle: (() -> Void)?
@@ -27,6 +29,7 @@ final class WorkspaceModel: ObservableObject {
     var pointerChanged: ((Bool) -> Void)?
     var requestWeatherWindow: (() -> Void)?
     var requestLayoutUpdate: (() -> Void)?
+    var requestPreferences: (() -> Void)?
     private var toastTask: Task<Void, Never>?
     private var pomodoroSubscription: AnyCancellable?
     private var shortcutProcesses: [UUID: Process] = [:]
@@ -40,6 +43,8 @@ final class WorkspaceModel: ObservableObject {
         music = MusicService(start: !preview)
         pomodoro = PomodoroService(defaults: defaults)
         weather = WeatherService(defaults: defaults, directory: storageDirectory, preview: preview)
+        loginItem = LoginItemService(preview: preview)
+        updates = UpdateService(preview: preview)
         if let data = defaults.data(forKey: "quickActions"), let saved = try? JSONDecoder().decode([QuickAction].self, from: data) { actions = saved }
         if preview { music.seedPreview(); clipboard.seedPreview() }
         pomodoroSubscription = pomodoro.objectWillChange.sink { [weak self] _ in
@@ -120,6 +125,7 @@ final class WorkspaceModel: ObservableObject {
     func stop() {
         music.stop()
         weather.stop()
+        updates.stop()
         clipboard.clear()
         pomodoro.shutdown()
         toastTask?.cancel()

@@ -43,6 +43,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         model.pointerChanged = { [weak self] inside in self?.pointerChanged(inside) }
         model.requestWeatherWindow = { [weak self] in self?.openWeather() }
         model.requestLayoutUpdate = { [weak self] in self?.reanchorPanel() }
+        model.requestPreferences = { [weak self] in self?.openPreferences() }
         setupPanel()
         setupMenu()
         registerHotkey()
@@ -114,9 +115,9 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
             panel.setFrame(frame, display: true)
             changingFrame = false
         } else {
-            withAnimation(.spring(response: 0.38, dampingFraction: 0.87)) { model.expanded = expanded }
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.87)) { model.expanded = expanded }
             NSAnimationContext.runAnimationGroup({ context in
-                context.duration = 0.27
+                context.duration = 0.23
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 panel.animator().setFrame(frame, display: true)
             }, completionHandler: { [weak self] in
@@ -128,8 +129,18 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
             if activate { NSApp.activate(ignoringOtherApps: true); panel.makeKey() }
         }
     }
-    func windowDidMove(_ notification: Notification) { reanchorPanel() }
-    func windowDidResize(_ notification: Notification) { reanchorPanel() }
+    func windowDidMove(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === panel { reanchorPanel() }
+    }
+    func windowDidResize(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === panel { reanchorPanel() }
+    }
+    func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow, window === preferencesWindow {
+            window.contentView = nil
+            preferencesWindow = nil
+        }
+    }
     private func reanchorPanel() {
         guard !changingFrame, let panel, let geometry else { return }
         let expected = geometry.frame(expanded: model.expanded, showsTimer: model.pomodoro.active)
@@ -151,6 +162,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         }
         menu.addItem(.separator())
         menu.addItem(withTitle: "Settings…", action: #selector(openPreferences), keyEquivalent: ",")
+        menu.addItem(withTitle: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
         menu.addItem(withTitle: "Quit Notch Workspace", action: #selector(quit), keyEquivalent: "q")
         for item in menu.items where item.target == nil { item.target = self }
         statusItem.menu = menu
@@ -158,6 +170,9 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         let settings = NSMenuItem(title: "Settings…", action: #selector(openPreferences), keyEquivalent: ",")
         settings.target = self
         appMenu.addItem(settings)
+        let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+        updateItem.target = self
+        appMenu.addItem(updateItem)
         appMenu.addItem(.separator())
         let quitItem = NSMenuItem(title: "Quit Notch Workspace", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
@@ -166,6 +181,19 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         let rootItem = NSMenuItem(title: "Notch Workspace", action: nil, keyEquivalent: "")
         rootItem.submenu = appMenu
         rootMenu.addItem(rootItem)
+        let fileMenu = NSMenu(title: "File")
+        fileMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let fileItem = NSMenuItem(title: "File", action: nil, keyEquivalent: "")
+        fileItem.submenu = fileMenu
+        rootMenu.addItem(fileItem)
+        let editMenu = NSMenu(title: "Edit")
+        for (title, action, key) in [("Undo", "undo:", "z"), ("Cut", "cut:", "x"), ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {
+            if title == "Cut" { editMenu.addItem(.separator()) }
+            editMenu.addItem(withTitle: title, action: Selector(action), keyEquivalent: key)
+        }
+        let editItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: "")
+        editItem.submenu = editMenu
+        rootMenu.addItem(editItem)
         NSApp.mainMenu = rootMenu
     }
     @objc private func togglePanel() {
@@ -195,12 +223,14 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
             window.title = "Notch Workspace Settings"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
+            window.delegate = self
             window.center()
             preferencesWindow = window
         }
         NSApp.activate(ignoringOtherApps: true)
         preferencesWindow?.makeKeyAndOrderFront(nil)
     }
+    @objc private func checkForUpdates() { openPreferences(); model.updates.check() }
     @objc private func quit() { NSApp.terminate(nil) }
     private func registerHotkey() {
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in

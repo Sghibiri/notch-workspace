@@ -48,10 +48,10 @@ struct FileTile: View {
     @ObservedObject var shelf: ShelfService
     var body: some View {
         HStack(spacing: 10) {
-            Image(nsImage: NSWorkspace.shared.icon(forFile: entry.url.path)).resizable().frame(width: 30, height: 30).opacity(entry.exists ? 1 : 0.35)
+            Image(nsImage: NSWorkspace.shared.icon(forFile: entry.url.path)).resizable().frame(width: 34, height: 34).opacity(entry.exists ? 1 : 0.35)
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.name).font(.system(size: 11, weight: .medium)).lineLimit(1).truncationMode(.middle)
-                Text(entry.exists ? entry.url.deletingLastPathComponent().lastPathComponent : "File unavailable").font(.system(size: 9)).foregroundStyle(WorkspaceTheme.dim).lineLimit(1)
+                Text(entry.name).font(.system(size: 12, weight: .medium)).lineLimit(1).truncationMode(.middle)
+                Text(entry.exists ? entry.url.deletingLastPathComponent().lastPathComponent : "File unavailable").font(.system(size: 10)).foregroundStyle(WorkspaceTheme.dim).lineLimit(1)
             }.frame(maxWidth: .infinity, alignment: .leading)
             Menu {
                 Button("Open") { shelf.open(entry) }.disabled(!entry.exists)
@@ -61,7 +61,7 @@ struct FileTile: View {
                 Button("Remove from shelf") { shelf.remove(entry.id) }
             } label: { Image(systemName: "ellipsis").font(.system(size: 11)).frame(width: 16, height: 25) }
                 .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().help("File actions")
-        }.padding(11).frame(height: 56)
+        }.padding(12).frame(height: 62)
             .background(WorkspaceTheme.card, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(WorkspaceTheme.line))
             .onTapGesture(count: 2) { shelf.open(entry) }
@@ -182,13 +182,13 @@ struct ActionsView: View {
             VStack(alignment: .leading, spacing: 11) {
                 Image(systemName: symbol).font(.system(size: 17, weight: .light)).foregroundStyle(tint)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.system(size: 11, weight: .medium)).foregroundStyle(.white).lineLimit(1)
-                    Text(detail).font(.system(size: 8)).foregroundStyle(WorkspaceTheme.dim).lineLimit(1)
+                    Text(title).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                    Text(detail).font(.system(size: 10)).foregroundStyle(WorkspaceTheme.dim).lineLimit(1)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(14)
                 .background(WorkspaceTheme.card, in: RoundedRectangle(cornerRadius: 13))
                 .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(WorkspaceTheme.line))
-        }.buttonStyle(.plain)
+        }.buttonStyle(HoverButton(radius: 13))
     }
 }
 
@@ -240,39 +240,5 @@ struct ActionEditor: View {
             target = identifier
             if title.isEmpty { title = url.deletingPathExtension().lastPathComponent }
         }
-    }
-}
-
-struct PreferencesView: View {
-    @ObservedObject var model: WorkspaceModel
-    @ObservedObject var clipboard: ClipboardService
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack(spacing: 13) {
-                Image(systemName: "square.stack.3d.up.fill").font(.system(size: 27)).foregroundStyle(WorkspaceTheme.accent)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Notch Workspace").font(.system(size: 21, weight: .semibold))
-                    Text("Your Mac, a little closer. · Version 0.3.0").font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-            }
-            Divider()
-            Toggle("Remember clipboard text", isOn: $clipboard.enabled)
-            Text("Up to 40 text copies, kept only in memory. History clears when you quit or lock your Mac. Standard concealed and temporary clipboard items are skipped.").font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            Button("Clear clipboard history") { clipboard.clear() }
-            Toggle("Reduce animation", isOn: $model.reduceMotion)
-            PomodoroSettingsView(pomodoro: model.pomodoro)
-            Text("Hover over the notch to open. Move away to close. Pin it to keep it open. Press Control–Option–Space to toggle it from any app.").font(.system(size: 11)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            Divider()
-            Text("Built from Boring Notch by TheBoredTeam, with music integration from MediaRemoteAdapter by Jonas van den Berg. This modified app is free software under GPL-3.0 and comes without warranty.").font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            HStack {
-                Link("Boring Notch", destination: URL(string: "https://github.com/TheBoredTeam/boring.notch")!)
-                Text("·")
-                Button("License") {
-                    if let url = Bundle.main.url(forResource: "LICENSE", withExtension: nil) { NSWorkspace.shared.open(url) }
-                }.buttonStyle(.link)
-                Spacer()
-                Button("Quit") { NSApp.terminate(nil) }
-            }.font(.system(size: 11))
-        }.padding(28).frame(width: 440).preferredColorScheme(.dark)
     }
 }

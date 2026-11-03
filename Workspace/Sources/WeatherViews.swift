@@ -69,9 +69,9 @@ struct WeatherQuickView: View {
             WeatherBackdrop(condition: weather.snapshot?.condition ?? .init(code: 0, isDay: false))
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Label(weather.place.name, systemImage: "location.fill").font(.system(size: 12, weight: .medium))
+                    Label(weather.place.name, systemImage: "location.fill").font(.system(size: 13, weight: .medium))
                     Spacer()
-                    Button { weather.refresh(force: true) } label: { Image(systemName: "arrow.clockwise").font(.system(size: 11)) }.disabled(weather.isLoading).accessibilityLabel("Refresh weather")
+                    Button { weather.refresh(force: true) } label: { Image(systemName: "arrow.clockwise").font(.system(size: 11)).frame(width: 28, height: 28) }.buttonStyle(HoverButton(radius: 8)).disabled(weather.isLoading).accessibilityLabel("Refresh weather")
                 }
                 if let snapshot = weather.snapshot {
                     HStack(alignment: .center) {
@@ -86,9 +86,9 @@ struct WeatherQuickView: View {
                     HStack(spacing: 0) {
                         ForEach(snapshot.upcomingHours(count: 5)) { hour in
                             VStack(spacing: 6) {
-                                Text(snapshot.clock(hour.time)).font(.system(size: 8)).foregroundStyle(.white.opacity(0.55))
-                                Image(systemName: hour.condition.symbol).font(.system(size: 12)).frame(height: 17)
-                                Text(weather.unit.format(hour.temperature)).font(.system(size: 10, weight: .medium))
+                                Text(snapshot.clock(hour.time)).font(.system(size: 10)).foregroundStyle(.white.opacity(0.6))
+                                Image(systemName: hour.condition.symbol).font(.system(size: 14)).frame(height: 19)
+                                Text(weather.unit.format(hour.temperature)).font(.system(size: 11, weight: .medium))
                             }.frame(maxWidth: .infinity)
                         }
                     }
@@ -98,9 +98,9 @@ struct WeatherQuickView: View {
                 Spacer(minLength: 0)
                 HStack {
                     Text(weather.preview ? "Sample forecast" : weather.error != nil ? "Saved forecast" : "Open-Meteo")
-                        .font(.system(size: 8)).foregroundStyle(.white.opacity(0.4))
+                        .font(.system(size: 9)).foregroundStyle(.white.opacity(0.5))
                     Spacer()
-                    Button { model.requestWeatherWindow?() } label: { Label("Open full weather", systemImage: "arrow.up.left.and.arrow.down.right").font(.system(size: 10, weight: .medium)) }
+                    Button { model.requestWeatherWindow?() } label: { Label("Open full weather", systemImage: "arrow.up.left.and.arrow.down.right").font(.system(size: 11, weight: .medium)) }.buttonStyle(QuietButton())
                 }
             }.padding(18)
         }.clipShape(RoundedRectangle(cornerRadius: 19)).buttonStyle(.plain)
@@ -121,7 +121,7 @@ struct WeatherHomeBadge: View {
             HStack(spacing: 4) {
                 Image(systemName: weather.snapshot?.condition.symbol ?? "cloud.sun")
                 Text(weather.snapshot.map { weather.unit.format($0.temperature) } ?? "Weather")
-            }.font(.system(size: 9, weight: .medium)).foregroundStyle(WorkspaceTheme.accent)
+            }.font(.system(size: 10, weight: .medium)).foregroundStyle(WorkspaceTheme.accent)
         }.buttonStyle(.plain).help("Weather in \(weather.place.name)").accessibilityLabel("Weather in \(weather.place.name)")
             .task {
                 while !Task.isCancelled {
