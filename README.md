@@ -23,7 +23,7 @@ Hover over the notch or press **Control–Option–Space**. Move away to close i
 
 No Electron, embedded browser, persistent server, account, or analytics. Weather requests go directly to Open-Meteo and use a 15-minute cache while a weather view is visible. Hover is event driven. Clipboard polling stops when capture is disabled. Pomodoro sleeps until its deadline instead of polling. The original project's optional camera/calendar/updater/XPC/animation packages are not linked into this target.
 
-The app bundle is approximately **3.1 MB**. Resource measurements, test details, build instructions, and scope are documented in [Workspace/README.md](Workspace/README.md).
+The app bundle is approximately **3.8 MB**, with a **1.3 MB** download. Resource measurements, test details, build instructions, and scope are documented in [Workspace/README.md](Workspace/README.md).
 
 ![Estoril weather window](Workspace/Resources/weather-preview.png)
 
