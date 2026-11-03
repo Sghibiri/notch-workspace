@@ -26,6 +26,7 @@ final class WorkspaceModel: ObservableObject {
     var requestExpand: ((WorkspaceTab) -> Void)?
     var pointerChanged: ((Bool) -> Void)?
     var requestWeatherWindow: (() -> Void)?
+    var requestLayoutUpdate: (() -> Void)?
     private var toastTask: Task<Void, Never>?
     private var pomodoroSubscription: AnyCancellable?
     private var shortcutProcesses: [UUID: Process] = [:]
@@ -41,7 +42,10 @@ final class WorkspaceModel: ObservableObject {
         weather = WeatherService(defaults: defaults, directory: storageDirectory, preview: preview)
         if let data = defaults.data(forKey: "quickActions"), let saved = try? JSONDecoder().decode([QuickAction].self, from: data) { actions = saved }
         if preview { music.seedPreview(); clipboard.seedPreview() }
-        pomodoroSubscription = pomodoro.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+        pomodoroSubscription = pomodoro.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+            Task { @MainActor [weak self] in self?.requestLayoutUpdate?() }
+        }
         pomodoro.onCompletion = { [weak self] phase in
             self?.requestExpand?(.home)
             self?.notify(phase == .focus ? "Focus complete. Time for a breather." : "Break complete. Ready for the next round?")
@@ -117,7 +121,7 @@ final class WorkspaceModel: ObservableObject {
         music.stop()
         weather.stop()
         clipboard.clear()
-        pomodoro.reset()
+        pomodoro.shutdown()
         toastTask?.cancel()
         for process in shortcutProcesses.values where process.isRunning { process.terminate() }
     }

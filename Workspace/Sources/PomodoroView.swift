@@ -1,6 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0
 import SwiftUI
 
+struct CompactPomodoroView: View {
+    @ObservedObject var pomodoro: PomodoroService
+    var body: some View {
+        Group {
+            if pomodoro.running {
+                TimelineView(.periodic(from: .now, by: 1)) { context in countdown(at: context.date) }
+            } else { countdown(at: Date()) }
+        }
+        .help("\(pomodoro.phase.title) timer · open the notch for Pause, Reset, and Cancel")
+    }
+    private func countdown(at date: Date) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: pomodoro.running ? "timer" : "pause.fill").font(.system(size: 7, weight: .medium))
+            Text(timeLabel(ceil(pomodoro.remaining(at: date)))).font(.system(size: 9, weight: .semibold, design: .monospaced)).monospacedDigit()
+        }.foregroundStyle(pomodoro.phase == .focus ? WorkspaceTheme.mint : WorkspaceTheme.accent)
+            .accessibilityLabel("\(pomodoro.phase.title), \(timeLabel(ceil(pomodoro.remaining(at: date)))), \(pomodoro.running ? "running" : "paused")")
+    }
+}
+
 struct PomodoroSettingsView: View {
     @ObservedObject var pomodoro: PomodoroService
     var onDone: (() -> Void)? = nil

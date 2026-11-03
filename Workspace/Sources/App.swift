@@ -42,6 +42,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         model.requestExpand = { [weak self] tab in self?.model.tab = tab; self?.setExpanded(true) }
         model.pointerChanged = { [weak self] inside in self?.pointerChanged(inside) }
         model.requestWeatherWindow = { [weak self] in self?.openWeather() }
+        model.requestLayoutUpdate = { [weak self] in self?.reanchorPanel() }
         setupPanel()
         setupMenu()
         registerHotkey()
@@ -84,7 +85,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
         geometry = PanelGeometry(screenFrame: screen.frame, cameraWidth: cameraWidth, cameraHeight: max(30, screen.safeAreaInsets.top))
         model.cameraWidth = cameraWidth
         model.cameraHeight = geometry.cameraHeight
-        panel?.setFrame(geometry.frame(expanded: model.expanded), display: true)
+        panel?.setFrame(geometry.frame(expanded: model.expanded, showsTimer: model.pomodoro.active), display: true)
     }
     private func pointerChanged(_ inside: Bool) {
         hoverTask?.cancel()
@@ -105,7 +106,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
     }
     private func setExpanded(_ expanded: Bool, activate: Bool = false) {
         guard panel != nil, geometry != nil else { return }
-        let frame = geometry.frame(expanded: expanded)
+        let frame = geometry.frame(expanded: expanded, showsTimer: model.pomodoro.active)
         changingFrame = true
         if !expanded { panel.makeFirstResponder(nil); panel.resignKey() }
         if model.reduceMotion {
@@ -131,7 +132,7 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
     func windowDidResize(_ notification: Notification) { reanchorPanel() }
     private func reanchorPanel() {
         guard !changingFrame, let panel, let geometry else { return }
-        let expected = geometry.frame(expanded: model.expanded)
+        let expected = geometry.frame(expanded: model.expanded, showsTimer: model.pomodoro.active)
         guard !NSEqualRects(panel.frame, expected) else { return }
         changingFrame = true
         panel.setFrame(expected, display: true)

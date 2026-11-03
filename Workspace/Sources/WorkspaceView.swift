@@ -27,11 +27,15 @@ struct WorkspaceView: View {
         .sheet(isPresented: $model.showActionEditor) { ActionEditor(model: model) }
     }
     private var compactContent: some View {
-        HStack {
+        HStack(spacing: 0) {
+            Group {
             if music.snapshot.hasTrack { Artwork(data: music.snapshot.artwork, size: 19) }
             else { Image(systemName: "square.stack.3d.up.fill").font(.system(size: 13)).foregroundStyle(WorkspaceTheme.accent) }
+            }.frame(width: model.pomodoro.active ? 46 : 23)
             Spacer(minLength: model.cameraWidth)
-            if model.pomodoro.active { Image(systemName: "timer").font(.system(size: 13)).foregroundStyle(WorkspaceTheme.mint) }
+            if model.pomodoro.active {
+                CompactPomodoroView(pomodoro: model.pomodoro).frame(width: 46)
+            }
             else { Waveform(playing: music.snapshot.isPlaying) }
         }
         .padding(.horizontal, 17)
@@ -125,7 +129,7 @@ struct HomeView: View {
                                 WeatherHomeBadge(weather: weather) { model.tab = .weather }
                             }
                             if model.pomodoro.active {
-                                Text(timeLabel(model.pomodoro.remaining(at: context.date))).font(.system(size: 47, weight: .light, design: .rounded)).monospacedDigit().foregroundStyle(WorkspaceTheme.mint)
+                                Text(timeLabel(ceil(model.pomodoro.remaining(at: context.date)))).font(.system(size: 47, weight: .light, design: .rounded)).monospacedDigit().foregroundStyle(WorkspaceTheme.mint)
                             } else {
                                 Text(context.date.formatted(.dateTime.hour().minute())).font(.system(size: 47, weight: .light, design: .rounded)).monospacedDigit()
                             }

@@ -51,8 +51,13 @@ final class MusicService: ObservableObject {
     }
     func consume(_ line: String) {
         guard let data = line.data(using: .utf8),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let payload = root["payload"] as? [String: Any] else { return }
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        if root["payload"] is NSNull {
+            snapshot = MediaSnapshot()
+            status = nil
+            return
+        }
+        guard let payload = root["payload"] as? [String: Any] else { return }
         let diff = root["diff"] as? Bool ?? false
         var next = diff ? snapshot : MediaSnapshot()
         next.title = payload["title"] as? String ?? (diff ? snapshot.title : "Nothing playing")

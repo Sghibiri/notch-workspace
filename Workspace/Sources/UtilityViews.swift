@@ -90,13 +90,28 @@ struct ClipboardView: View {
                 Button { clipboard.clear(); model.notify("Clipboard history cleared.") } label: { Image(systemName: "trash").font(.system(size: 11)) }
                     .buttonStyle(QuietButton()).disabled(clipboard.history.entries.isEmpty).help("Clear history").accessibilityLabel("Clear clipboard history")
             }
-            if !clipboard.enabled && clipboard.history.entries.isEmpty {
+            if clipboard.blockedBySystem && clipboard.history.entries.isEmpty {
+                VStack(spacing: 14) {
+                    EmptyCard(symbol: "hand.raised", title: "Clipboard access is blocked", detail: "Review Notch Workspace's clipboard access in System Settings, then check access again.")
+                    HStack {
+                        Button("System Settings") { model.openSettings() }
+                        Button("Check access") { clipboard.recheckAccess() }
+                    }.font(.system(size: 11)).buttonStyle(.bordered)
+                }.padding(.bottom, 14)
+            } else if !clipboard.enabled && clipboard.history.entries.isEmpty {
                 VStack(spacing: 15) {
                     EmptyCard(symbol: "doc.on.clipboard", title: "Good ideas deserve a second copy", detail: "Enable to remember your next 40 text copies.\nHistory stays in memory and clears on quit or lock.")
                     Button("Enable clipboard history") { clipboard.enabled = true; model.notify("Clipboard history enabled.") }
                         .buttonStyle(.borderedProminent).tint(WorkspaceTheme.accent).foregroundStyle(.black).font(.system(size: 11, weight: .medium))
                 }.padding(.bottom, 16)
             } else {
+                if clipboard.blockedBySystem {
+                    HStack {
+                        Label("New copies are blocked by macOS.", systemImage: "hand.raised").font(.system(size: 10))
+                        Spacer()
+                        Button("Check access") { clipboard.recheckAccess() }.font(.system(size: 10))
+                    }.foregroundStyle(WorkspaceTheme.accent)
+                }
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(WorkspaceTheme.dim)
                     TextField("Find a recent copy…", text: $query).textFieldStyle(.plain).font(.system(size: 11)).accessibilityLabel("Search clipboard")
@@ -127,7 +142,7 @@ struct ClipboardView: View {
                     }
                 }
                 HStack {
-                    Text(clipboard.enabled ? "Remembering new copies" : "Paused · existing history is still available")
+                    Text(clipboard.blockedBySystem ? "Capture stopped · review clipboard access in System Settings" : clipboard.enabled ? "Remembering new copies" : "Paused · existing history is still available")
                     Spacer()
                     Text("\(clipboard.history.entries.count) / 40")
                 }.font(.system(size: 9)).foregroundStyle(WorkspaceTheme.dim)
@@ -237,7 +252,7 @@ struct PreferencesView: View {
                 Image(systemName: "square.stack.3d.up.fill").font(.system(size: 27)).foregroundStyle(WorkspaceTheme.accent)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Notch Workspace").font(.system(size: 21, weight: .semibold))
-                    Text("Your Mac, a little closer. · Version 0.2.0").font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text("Your Mac, a little closer. · Version 0.3.0").font(.system(size: 11)).foregroundStyle(.secondary)
                 }
             }
             Divider()
