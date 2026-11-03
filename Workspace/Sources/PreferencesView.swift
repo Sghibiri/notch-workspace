@@ -62,7 +62,6 @@ struct PreferencesView: View {
         }.frame(width: 500, height: 650)
             .background(Color(red: 0.035, green: 0.035, blue: 0.045))
             .toggleStyle(.switch).controlSize(.small).tint(WorkspaceTheme.accent).preferredColorScheme(.dark)
-            .onExitCommand { NSApp.keyWindow?.performClose(nil) }
     }
     private func settingLabel(_ title: String, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 5) {

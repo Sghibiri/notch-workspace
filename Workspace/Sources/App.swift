@@ -238,6 +238,10 @@ final class WorkspaceDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate
                 self?.togglePanel()
                 return nil
             }
+            if event.keyCode == UInt16(kVK_Escape), let window = self?.preferencesWindow, window.isKeyWindow {
+                window.performClose(nil)
+                return nil
+            }
             return event
         }
         let id = EventHotKeyID(signature: OSType(0x4E57534B), id: 1)
